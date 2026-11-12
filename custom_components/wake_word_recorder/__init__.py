@@ -36,7 +36,7 @@ from .background import BackgroundSession
 from .const import CONF_HOUSEHOLD, DEFAULT_BACKGROUND_MINUTES, DOMAIN, SIGNAL_UPDATE, STATIC_URL
 from .household import HOUSEHOLD_FILE, Household, HouseholdError, load
 from .listen_signal import SIGNAL_BEEP
-from .pipeline import Restorer, async_ensure_pipeline, pipeline_select
+from .pipeline import Restorer, async_ensure_pipeline, pipeline_selects
 from .session import Session
 
 _LOGGER = logging.getLogger(__name__)
@@ -183,8 +183,13 @@ async def _async_run(
         # restore never runs late over a new session (also on the same satellite)
         await runtime.restoring
     await async_ensure_pipeline(hass)
-    select = pipeline_select(hass, satellite)
-    await runtime.restorer.async_switch(select)
+    selects = pipeline_selects(hass, satellite)
+    for select in selects:
+        await runtime.restorer.async_switch(select)
+
+    async def restore() -> None:
+        for select in selects:
+            await runtime.restorer.async_restore(select)
 
     @callback
     def ended(session: Session | BackgroundSession) -> None:
@@ -193,7 +198,7 @@ async def _async_run(
         runtime.ended_at = hass.loop.time()
         if session.info is not None:
             runtime.last = summary(session)
-        runtime.restoring = hass.async_create_task(runtime.restorer.async_restore(select))
+        runtime.restoring = hass.async_create_task(restore())
         notify(hass)
 
     session = factory(ended, lambda: notify(hass))
@@ -202,7 +207,7 @@ async def _async_run(
         await session.async_start()
     except Exception:
         runtime.session = None
-        await runtime.restorer.async_restore(select)
+        await restore()
         raise
     return session
 

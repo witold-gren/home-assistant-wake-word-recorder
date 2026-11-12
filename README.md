@@ -144,6 +144,10 @@ pipeline again in the satellite's settings.
 that were unavailable, and a session on one waited in silence. From 0.2.0 only satellites that are up
 are listed, and starting on one that went away says so.
 
+**The satellite keeps processing and no take is saved.** Up to 0.2.0 a Voice PE with a second wake
+word had only its first pipeline switched, and the takes went to the second wake word's assistant.
+From 0.2.1 every pipeline of the satellite is switched for the session.
+
 **"No household.yaml".** The folder given at setup has no `household.yaml`: add the integration again
 and let it create one, or create it by hand as above.
 

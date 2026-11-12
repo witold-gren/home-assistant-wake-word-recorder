@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+- A satellite with two wake words (Voice PE) records again: it has a pipeline per wake word and the
+  recorder's conversation can run on either, so a session switches them all to "Wake word
+  recording" and gives each its own back. Before, only the first was switched; the takes went
+  through the second wake word's ordinary assistant (long processing, nothing saved).
+
 ## 0.2.0
 
 - One **Satellite** select for both recording takes and listening to the home (they never run at

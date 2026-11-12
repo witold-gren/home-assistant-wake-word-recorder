@@ -584,3 +584,35 @@ async def test_another_round_after_the_target(hass: HomeAssistant, entry, satell
     )
     assert response == {"done": 6, "target": 18}  # one more round of the 12 delivery variants
     assert "Nagranie 7 z 18. Pytająco." in satellite.conversations[-1]["start_message"]
+
+
+async def test_a_satellite_with_two_wake_words_records_on_both_pipelines(
+    hass: HomeAssistant, entry, satellite: Satellite
+) -> None:
+    """A Voice PE has a pipeline per wake word, and the recorder's conversation may run on either:
+    a session switches both and gives each its own back."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    from .conftest import PIPELINE_SELECT_WORD_2
+
+    device = dr.async_get(hass).async_get_device(identifiers={("esphome", "aa:bb")})
+    er.async_get(hass).async_get_or_create(
+        "select", "esphome", "aa:bb-pipeline_2", device_id=device.id, suggested_object_id="kid_room_assistant_2"
+    )
+    options = hass.states.get(PIPELINE_SELECT).attributes["options"]
+    hass.states.async_set(PIPELINE_SELECT_WORD_2, "Kitchen", {"options": options})
+    await _setup(hass, entry)
+    await hass.services.async_call(
+        DOMAIN,
+        "start_session",
+        {"satellite": SATELLITE, "speaker": "kid", "word": "robo"},
+        blocking=True,
+        return_response=True,
+    )
+    assert hass.states.get(PIPELINE_SELECT).state == PIPELINE_NAME
+    assert hass.states.get(PIPELINE_SELECT_WORD_2).state == PIPELINE_NAME
+    await hass.services.async_call(DOMAIN, "stop_session", {}, blocking=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(PIPELINE_SELECT).state == "Home Assistant"
+    assert hass.states.get(PIPELINE_SELECT_WORD_2).state == "Kitchen"

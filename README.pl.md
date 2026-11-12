@@ -143,6 +143,10 @@ ponownie w ustawieniach satelity.
 też niedostępne, a sesja na takiej czekała w ciszy. Od 0.2.0 lista ma tylko działające satelity, a start
 na takiej, która przestała działać, pokazuje błąd.
 
+**Satelita cały czas przetwarza, a nagrania się nie zapisują.** Do wersji 0.2.0 w Voice PE z drugim
+słowem wybudzającym przełączany był tylko pierwszy potok, a nagrania trafiały do asystenta drugiego
+słowa. Od 0.2.1 na czas sesji przełączane są wszystkie potoki satelity.
+
 **„No household.yaml”.** W folderze podanym przy konfiguracji nie ma `household.yaml`: dodaj
 integrację ponownie i pozwól jej go utworzyć albo utwórz go ręcznie jak wyżej.
 

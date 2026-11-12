@@ -30,6 +30,8 @@ HOUSEHOLD = {
 }
 SATELLITE = "assist_satellite.kid_room"
 PIPELINE_SELECT = "select.kid_room_assistant"
+# The pipeline of the second wake word of the kid room satellite (added by the tests that need it)
+PIPELINE_SELECT_WORD_2 = "select.kid_room_assistant_2"
 # a second satellite (the kitchen), to switch between satellites
 SATELLITE_2 = "assist_satellite.kitchen"
 PIPELINE_SELECT_2 = "select.kitchen_assistant"
@@ -116,7 +118,7 @@ def satellite(hass: HomeAssistant) -> Satellite:
     hass.states.async_set(PIPELINE_SELECT_2, "Kitchen", {"options": options})
 
     async def select_option(_hass: HomeAssistant, select: str, option: str) -> None:
-        assert select in (PIPELINE_SELECT, PIPELINE_SELECT_2)
+        assert select in (PIPELINE_SELECT, PIPELINE_SELECT_2, PIPELINE_SELECT_WORD_2)
         if select in fake.slow:
             await asyncio.sleep(0.05)
         if select == PIPELINE_SELECT:

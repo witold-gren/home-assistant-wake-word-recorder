@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 
 from homeassistant.components.assist_pipeline import (
     async_create_default_pipeline,
@@ -48,20 +49,32 @@ async def async_ensure_pipeline(hass: HomeAssistant) -> None:
         await async_update_pipeline(hass, pipeline, stt_engine=stt_id, conversation_engine=agent_id, tts_engine=tts_id)
 
 
-def pipeline_select(hass: HomeAssistant, satellite: str) -> str:
-    """The satellite's "Assistant" select (pipeline chooser) on the same device."""
+def pipeline_selects(hass: HomeAssistant, satellite: str) -> list[str]:
+    """The satellite's "Assistant" selects (pipeline choosers) on the same device.
+
+    A satellite with two wake words (Voice PE) has one per wake word, and a conversation the
+    recorder starts runs on either of them, so a session switches them all.
+    """
     registry = er.async_get(hass)
     entry = registry.async_get(satellite)
     if entry is None or entry.device_id is None:
         raise HomeAssistantError(f"{satellite} is not a voice satellite with a device")
-    for candidate in er.async_entries_for_device(registry, entry.device_id):
-        if candidate.domain == "select" and candidate.unique_id.endswith("-pipeline"):
-            return candidate.entity_id
-    raise HomeAssistantError(f"{satellite} has no pipeline select")
+    selects = sorted(
+        candidate.entity_id
+        for candidate in er.async_entries_for_device(registry, entry.device_id)
+        if candidate.domain == "select" and PIPELINE_SELECT.search(candidate.unique_id)
+    )
+    if not selects:
+        raise HomeAssistantError(f"{satellite} has no pipeline select")
+    return selects
 
 
 async def async_select(hass: HomeAssistant, select: str, option: str) -> None:
     await hass.services.async_call("select", "select_option", {"entity_id": select, "option": option}, blocking=True)
+
+
+# The unique id of a satellite's pipeline select: "<mac>-pipeline", "<mac>-pipeline_2" …
+PIPELINE_SELECT = re.compile(r"-pipeline(_\d+)?$")
 
 
 class Restorer:
