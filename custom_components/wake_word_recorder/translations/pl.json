@@ -42,7 +42,8 @@
         "name": "Stan",
         "state": {
           "idle": "Bezczynny",
-          "recording": "Nagrywanie"
+          "recording": "Nagrywanie",
+          "listening": "Nasłuchiwanie otoczenia"
         }
       }
     },
@@ -55,9 +56,6 @@
       },
       "satellite": {
         "name": "Satelita"
-      },
-      "background_satellite": {
-        "name": "Satelita do nagrania dźwięków domu"
       },
       "signal": {
         "name": "Sygnał „mów teraz”",

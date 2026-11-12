@@ -42,7 +42,8 @@
         "name": "Status",
         "state": {
           "idle": "Idle",
-          "recording": "Recording"
+          "recording": "Recording",
+          "listening": "Listening to the home"
         }
       }
     },
@@ -55,9 +56,6 @@
       },
       "satellite": {
         "name": "Satellite"
-      },
-      "background_satellite": {
-        "name": "Background satellite"
       },
       "signal": {
         "name": "Speak now signal",

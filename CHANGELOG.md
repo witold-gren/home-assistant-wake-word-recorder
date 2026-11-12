@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- One **Satellite** select for both recording takes and listening to the home (they never run at
+  once); the second "Background satellite" select is removed.
+- Only satellites that are up are listed. Starting on one that is unavailable says so instead of
+  waiting in silence (a session started on an unavailable satellite did nothing at all).
+- The status shows `listening` while the home is being recorded, `recording` while takes are.
+
 ## 0.1.1
 
 - Its own repository (it was part of a wake word training toolkit).

@@ -78,7 +78,8 @@ Zmiany w pliku są wykrywane w ciągu 10 sekund (albo od razu akcją `wake_word_
 
 ## Nagrywanie
 
-Na urządzeniu **Wake Word Recorder** wybierz **Osobę**, **Słowo wybudzające** i **Satelitę**, potem
+Na urządzeniu **Wake Word Recorder** wybierz **Osobę**, **Słowo wybudzające** i **Satelitę** (lista
+pokazuje tylko działające satelity), potem
 naciśnij **Rozpocznij nagrywanie** (albo wywołaj `wake_word_recorder.start_session`).
 
 - Satelita przechodzi na potok **„Wake word recording”** (tworzy go integracja, z głosem Twojego
@@ -90,13 +91,15 @@ naciśnij **Rozpocznij nagrywanie** (albo wywołaj `wake_word_recorder.start_ses
 - Sesja kończy się po osiągnięciu celu osoby (albo po `count` nagraniach), po 3 turach ciszy, po 6
   odrzuconych nagraniach z rzędu albo przyciskiem **Zakończ nagrywanie**.
 - `data/real/recordings.csv` zapisuje, które urządzenie nagrało każde nagranie.
-- `sensor.wake_word_recorder_status` pokazuje postęp: osoba, słowo, zrobione/cel, ostatni plik, problemy.
+- `sensor.wake_word_recorder_status` pokazuje `recording` i postęp: osoba, słowo, zrobione/cel, ostatni
+  plik, problemy.
 
 ### Tło domu
 
-Wybierz **Satelitę do nagrania dźwięków domu** i naciśnij **Nasłuchuj 30 min** (albo wywołaj
+Przy tej samej wybranej **Satelicie** naciśnij **Nasłuchuj 30 min** (albo wywołaj
 `wake_word_recorder.start_background` z `minutes`). Urządzenie po cichu nagrywa do
-`data/background/<satelita>_<data>.wav` dokładnie to, co słyszą jego mikrofony. W tym czasie nikt nie
+`data/background/<satelita>_<data>.wav` dokładnie to, co słyszą jego mikrofony; status pokazuje
+`listening` (Nasłuchiwanie otoczenia). W tym czasie nikt nie
 powinien mówić słowa wybudzającego.
 
 ### Dziennik wybudzeń
@@ -135,6 +138,10 @@ wyróżniało (telewizor, muzyka, wentylator). Nagrywaj w cichszej chwili; hała
 **Satelita została na „Wake word recording”.** Integracja przywraca poprzedni potok po każdej sesji,
 także po restarcie. Jeśli w międzyczasie satelita została przełączona ręcznie, wybierz jej potok
 ponownie w ustawieniach satelity.
+
+**Rozpocznij nagrywanie albo Nasłuchuj 30 min nic nie robi.** Do wersji 0.1.1 lista satelit pokazywała
+też niedostępne, a sesja na takiej czekała w ciszy. Od 0.2.0 lista ma tylko działające satelity, a start
+na takiej, która przestała działać, pokazuje błąd.
 
 **„No household.yaml”.** W folderze podanym przy konfiguracji nie ma `household.yaml`: dodaj
 integrację ponownie i pozwól jej go utworzyć albo utwórz go ręcznie jak wyżej.

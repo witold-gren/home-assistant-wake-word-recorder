@@ -12,7 +12,7 @@ from . import RecorderConfigEntry
 from .background import BackgroundSession
 from .entity import RecorderEntity
 
-STATES = ["idle", "recording"]
+STATES = ["idle", "recording", "listening"]
 
 
 async def async_setup_entry(
@@ -33,7 +33,9 @@ class StatusSensor(RecorderEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         session = self.runtime.session
-        return "recording" if session is not None and session.active else "idle"
+        if session is None or not session.active:
+            return "idle"
+        return "listening" if isinstance(session, BackgroundSession) else "recording"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

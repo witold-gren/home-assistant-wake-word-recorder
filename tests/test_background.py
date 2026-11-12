@@ -25,7 +25,7 @@ async def test_background_session(hass: HomeAssistant, entry, satellite: Satelli
     assert hass.states.get(PIPELINE_SELECT).state == PIPELINE_NAME
     assert satellite.conversations[-1]["start_message"].startswith("Nagrywam dźwięki domu przez 1 minut.")
     status = hass.states.get(STATUS)
-    assert status.state == "recording" and status.attributes["mode"] == "background"
+    assert status.state == "listening" and status.attributes["mode"] == "background"
 
     for audio in (pcm_word(seconds=2), pcm_silence(3)):
         answer = await _turn(hass, audio)
@@ -108,24 +108,71 @@ async def test_silence_is_served(hass: HomeAssistant, entry, hass_client) -> Non
     assert (await response.read())[:4] == b"RIFF"
 
 
-async def test_background_satellite_select(hass: HomeAssistant, entry, satellite: Satellite) -> None:
+async def test_one_satellite_for_takes_and_the_home(hass: HomeAssistant, entry, satellite: Satellite) -> None:
+    """Takes and listening never run at once: the one satellite select serves both."""
     await _setup(hass, entry)
+    assert hass.states.get("select.wake_word_recorder_background_satellite") is None
     hass.states.async_set("assist_satellite.kitchen", "idle", {"friendly_name": "Kitchen"})
     await hass.async_block_till_done()
-    select = "select.wake_word_recorder_background_satellite"
-    assert hass.states.get(select).attributes["options"] == ["Kid room", "Kitchen"]
-    # the takes satellite is a fallback; the background one wins when chosen
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.wake_word_recorder_satellite", "option": "Kitchen"},
+        {"entity_id": "select.wake_word_recorder_satellite", "option": "Kid room"},
         blocking=True,
-    )
-    await hass.services.async_call(
-        "select", "select_option", {"entity_id": select, "option": "Kid room"}, blocking=True
     )
     await hass.services.async_call(
         "button", "press", {"entity_id": "button.wake_word_recorder_background"}, blocking=True
     )
     assert satellite.conversations[-1]["entity_id"] == SATELLITE
-    assert hass.states.get(STATUS).attributes["satellite"] == SATELLITE
+    status = hass.states.get(STATUS)
+    assert status.state == "listening"
+    assert status.attributes["satellite"] == SATELLITE
+
+
+async def test_the_old_background_select_is_removed(hass: HomeAssistant, entry, satellite: Satellite) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        f"{entry.entry_id}-background_satellite",
+        config_entry=entry,
+        suggested_object_id="wake_word_recorder_background_satellite",
+    )
+    await _setup(hass, entry)
+    assert registry.async_get_entity_id("select", DOMAIN, f"{entry.entry_id}-background_satellite") is None
+
+
+async def test_only_satellites_that_are_up_are_offered(hass: HomeAssistant, entry, satellite: Satellite) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+    import pytest
+
+    await _setup(hass, entry)
+    select = "select.wake_word_recorder_satellite"
+    hass.states.async_set("assist_satellite.kitchen", "unavailable", {"friendly_name": "Kitchen"})
+    await hass.async_block_till_done()
+    assert hass.states.get(select).attributes["options"] == ["Kid room"]
+    # It comes back: offered again
+    hass.states.async_set("assist_satellite.kitchen", "idle", {"friendly_name": "Kitchen"})
+    await hass.async_block_till_done()
+    assert hass.states.get(select).attributes["options"] == ["Kid room", "Kitchen"]
+    # The chosen one goes away: still shown, but nothing starts on it, and it says why
+    await hass.services.async_call("select", "select_option", {"entity_id": select, "option": "Kitchen"}, blocking=True)
+    hass.states.async_set("assist_satellite.kitchen", "unavailable", {"friendly_name": "Kitchen"})
+    await hass.async_block_till_done()
+    assert hass.states.get(select).state == "Kitchen"
+    with pytest.raises(HomeAssistantError, match="Kitchen is unavailable"):
+        await hass.services.async_call(
+            "button", "press", {"entity_id": "button.wake_word_recorder_background"}, blocking=True
+        )
+    with pytest.raises(HomeAssistantError, match="Kitchen is unavailable"):
+        await hass.services.async_call(
+            DOMAIN,
+            "start_session",
+            {"satellite": "assist_satellite.kitchen", "speaker": "kid", "word": "robo"},
+            blocking=True,
+            return_response=True,
+        )
+    assert hass.states.get(STATUS).state == "idle"

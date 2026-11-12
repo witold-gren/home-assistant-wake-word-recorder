@@ -79,7 +79,8 @@ Changes to the file are noticed within 10 seconds (or at once with the action
 
 ## Recording
 
-On the **Wake Word Recorder** device choose the **Person**, the **Wake word** and the **Satellite**,
+On the **Wake Word Recorder** device choose the **Person**, the **Wake word** and the **Satellite** (only
+satellites that are up are listed),
 then press **Start recording** (or call `wake_word_recorder.start_session`).
 
 - The satellite switches to the **"Wake word recording"** pipeline (created by the integration, with
@@ -91,13 +92,15 @@ then press **Start recording** (or call `wake_word_recorder.start_session`).
 - The session ends at the person's target (or after `count` takes), after 3 silent turns, after 6
   rejected takes in a row, or with **Stop recording**.
 - `data/real/recordings.csv` notes which device recorded each take.
-- `sensor.wake_word_recorder_status` shows the progress: person, word, done/target, last file, problems.
+- `sensor.wake_word_recorder_status` shows `recording` and the progress: person, word, done/target, last
+  file, problems.
 
 ### Household background
 
-Choose the **Background satellite** and press **Listen 30 min** (or call
+With the same **Satellite** chosen, press **Listen 30 min** (or call
 `wake_word_recorder.start_background` with `minutes`). The device silently records to
-`data/background/<satellite>_<date>.wav`, exactly what its microphones hear. Nobody should say the wake
+`data/background/<satellite>_<date>.wav`, exactly what its microphones hear; the status shows
+`listening`. Nobody should say the wake
 word meanwhile.
 
 ### Wake log
@@ -136,6 +139,10 @@ music, a fan). Record in a quieter moment; record the noise separately with **Li
 **The satellite stayed on "Wake word recording".** The integration restores the previous pipeline
 after each session, also after a restart. If a satellite was switched by hand meanwhile, choose its
 pipeline again in the satellite's settings.
+
+**Start recording or Listen 30 min does nothing.** Up to 0.1.1 the satellite list also offered satellites
+that were unavailable, and a session on one waited in silence. From 0.2.0 only satellites that are up
+are listed, and starting on one that went away says so.
 
 **"No household.yaml".** The folder given at setup has no `household.yaml`: add the integration again
 and let it create one, or create it by hand as above.

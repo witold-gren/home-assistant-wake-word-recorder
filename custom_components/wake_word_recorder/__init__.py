@@ -19,10 +19,11 @@ from pathlib import Path
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -56,7 +57,6 @@ class RuntimeData:
     speaker: str | None = None
     word: str | None = None
     satellite: str | None = None
-    background_satellite: str | None = None  # for background recording (falls back to satellite)
     last: dict = field(default_factory=dict)  # summary of the last finished session
     mtime: float | None = None  # of household.yaml when it was read
     ended_at: float = 0.0  # monotonic time the last session ended (late turns stay silent)
@@ -81,6 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RecorderConfigEntry) -> 
     except HouseholdError as err:
         raise ConfigEntryNotReady(str(err)) from err
     entry.runtime_data = RuntimeData(household, Restorer(hass))
+    # 0.1: a second satellite select for background recording, now the one satellite select
+    registry = er.async_get(hass)
+    if old := registry.async_get_entity_id("select", DOMAIN, f"{entry.entry_id}-background_satellite"):
+        registry.async_remove(old)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _started(_hass: HomeAssistant) -> None:
@@ -203,6 +207,13 @@ async def _async_run(
     return session
 
 
+def _check_satellite(hass: HomeAssistant, satellite: str) -> None:
+    """A session on a satellite that is not there would wait for it in silence."""
+    state = hass.states.get(satellite)
+    if state is not None and state.state == STATE_UNAVAILABLE:
+        raise HomeAssistantError(f"{state.name} is unavailable: turn it on or choose another satellite")
+
+
 async def async_start_session(
     hass: HomeAssistant,
     entry: RecorderConfigEntry,
@@ -224,6 +235,7 @@ async def async_start_session(
         raise HomeAssistantError(f"Unknown word '{word}' in household.yaml")
     if speaker not in household.words[word].speakers:
         raise HomeAssistantError(f"'{speaker}' does not use the word '{word}' (household.yaml)")
+    _check_satellite(hass, satellite)
     session = await _async_run(
         hass,
         entry,
@@ -242,9 +254,10 @@ async def async_start_background(
     minutes: int = DEFAULT_BACKGROUND_MINUTES,
 ) -> BackgroundSession:
     runtime = entry.runtime_data
-    satellite = satellite or runtime.background_satellite or runtime.satellite
+    satellite = satellite or runtime.satellite
     if not satellite:
         raise HomeAssistantError("Choose the satellite first")
+    _check_satellite(hass, satellite)
     household = await async_reload_household(hass, entry)
     session = await _async_run(
         hass,

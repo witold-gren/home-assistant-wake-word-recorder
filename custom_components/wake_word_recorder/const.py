@@ -28,7 +28,6 @@ ENTITY_IDS = {
     "speaker": "select.wake_word_recorder_speaker",
     "word": "select.wake_word_recorder_word",
     "satellite": "select.wake_word_recorder_satellite",
-    "background_satellite": "select.wake_word_recorder_background_satellite",
     "signal": "select.wake_word_recorder_signal",
     "start": "button.wake_word_recorder_start",
     "stop": "button.wake_word_recorder_stop",

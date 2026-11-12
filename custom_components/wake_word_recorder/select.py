@@ -7,6 +7,7 @@ restarts.
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_added_domain, async_track_state_removed_domain
@@ -27,7 +28,6 @@ async def async_setup_entry(
             SpeakerSelect(entry),
             WordSelect(entry),
             SatelliteSelect(entry),
-            BackgroundSatelliteSelect(entry),
             SignalSelect(entry),
         ]
     )
@@ -103,27 +103,37 @@ class WordSelect(ChoiceSelect):
 class SatelliteSelect(ChoiceSelect):
     key = "satellite"
 
+    """The satellite for both recording takes and listening to the home: only one can run at a time."""
+
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        # satellites (ESPHome …) usually load after this integration - refresh the options
+        # satellites (ESPHome …) load after this integration and come and go: refresh the options
         for track in (async_track_state_added_domain, async_track_state_removed_domain):
             self.async_on_remove(track(self.hass, "assist_satellite", self._satellites_changed))
+        self.async_on_remove(self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._availability_changed))
 
     @callback
     def _satellites_changed(self, _event: Event) -> None:
         self.async_write_ha_state()
 
     @callback
+    def _availability_changed(self, event: Event) -> None:
+        old, new = event.data.get("old_state"), event.data.get("new_state")
+        if not event.data["entity_id"].startswith("assist_satellite.") or old is None or new is None:
+            return
+        if (old.state == STATE_UNAVAILABLE) != (new.state == STATE_UNAVAILABLE):
+            self.async_write_ha_state()
+
+    @callback
     def choices(self) -> dict[str, str]:
+        """The satellites that are up, and the chosen one even when it is not."""
         if self.hass is None:
             return {}
-        return {state.name: state.entity_id for state in self.hass.states.async_all("assist_satellite")}
-
-
-class BackgroundSatelliteSelect(SatelliteSelect):
-    """The satellite that records the sounds of the home (the "Listen 30 min" button)."""
-
-    key = "background_satellite"
+        return {
+            state.name: state.entity_id
+            for state in self.hass.states.async_all("assist_satellite")
+            if state.state != STATE_UNAVAILABLE or state.entity_id == self.runtime.satellite
+        }
 
 
 class SignalSelect(RecorderEntity, SelectEntity, RestoreEntity):
