@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+- A take the device spoke into is not kept. When the text-to-speech is slow, the satellite starts
+  listening before its instruction plays, and the instruction lands in the take ("Saved", "Take 17
+  of 24"). A take during which the satellite's own speaker started playing is now asked again
+  ("I was still speaking during the take").
+
 ## 0.2.1
 
 - A satellite with two wake words (Voice PE) records again: it has a pipeline per wake word and the

@@ -616,3 +616,46 @@ async def test_a_satellite_with_two_wake_words_records_on_both_pipelines(
     await hass.async_block_till_done()
     assert hass.states.get(PIPELINE_SELECT).state == "Home Assistant"
     assert hass.states.get(PIPELINE_SELECT_WORD_2).state == "Kitchen"
+
+
+async def test_a_take_the_device_spoke_into_is_not_kept(
+    hass: HomeAssistant, entry, satellite: Satellite, household_dir
+) -> None:
+    """A slow text-to-speech: the satellite listens before its instruction plays, and the
+    instruction lands in the take. Such a take is asked again, not stored."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    device = dr.async_get(hass).async_get_device(identifiers={("esphome", "aa:bb")})
+    er.async_get(hass).async_get_or_create(
+        "media_player", "esphome", "aa:bb-media_player", device_id=device.id, suggested_object_id="kid_room_speaker"
+    )
+    hass.states.async_set("media_player.kid_room_speaker", "idle")
+    await _setup(hass, entry)
+    await hass.services.async_call(
+        DOMAIN,
+        "start_session",
+        {"satellite": SATELLITE, "speaker": "kid", "word": "robo"},
+        blocking=True,
+        return_response=True,
+    )
+    folder = household_dir / "data" / "real" / "robo" / "kid"
+    before = len(list(folder.glob("*.wav"))) if folder.exists() else 0
+
+    # The satellite listens, then its late instruction plays into the take
+    hass.states.async_set(SATELLITE, "listening")
+    await hass.async_block_till_done()
+    hass.states.async_set("media_player.kid_room_speaker", "playing")
+    await hass.async_block_till_done()
+    engine = stt.async_get_speech_to_text_engine(hass, STT)
+    await engine.internal_async_process_audio_stream(METADATA, _stream(pcm_word()))
+    answer = await conversation.async_converse(hass, TRANSCRIPT, None, Context(), language="pl", agent_id=AGENT)
+    assert _speech(answer).startswith("Mówiłem jeszcze w trakcie nagrania. Jeszcze raz.")
+    assert hass.states.get(STATUS).attributes["last_issues"] == ["overlap"]
+    assert (len(list(folder.glob("*.wav"))) if folder.exists() else 0) == before
+
+    # The next turn, with the speaker quiet, is stored
+    hass.states.async_set(SATELLITE, "responding")
+    hass.states.async_set("media_player.kid_room_speaker", "idle")
+    await _turn(hass, pcm_word())
+    assert len(list(folder.glob("*.wav"))) == before + 1

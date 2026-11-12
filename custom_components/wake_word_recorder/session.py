@@ -20,6 +20,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .household import Household
@@ -33,6 +34,18 @@ MAX_FAILS = 6  # rejected takes in a row (too quiet, clipped …) -> stop
 # after the agent's reply the satellite may pass through idle before listening again
 RESUME_SECONDS = 4.0
 MAX_AUDIO_BYTES = 20 * 16000 * 2  # 20 s; longer is not a wake word
+
+
+def satellite_player(hass: HomeAssistant, satellite: str) -> str | None:
+    """The media player on the satellite's device: the speaker it talks through."""
+    registry = er.async_get(hass)
+    entry = registry.async_get(satellite)
+    if entry is None or entry.device_id is None:
+        return None
+    return next(
+        (e.entity_id for e in er.async_entries_for_device(registry, entry.device_id) if e.domain == "media_player"),
+        None,
+    )
 
 
 @dataclass
@@ -77,6 +90,9 @@ class Session:
         self._listened = False  # the satellite listened since the last prompt
         self._misses = 0
         self._fails = 0
+        # The satellite's own speaker: a take during which it played holds the device's voice
+        self._player = satellite_player(hass, satellite)
+        self._overlap = False
         self._unsub: CALLBACK_TYPE | None = None
         self._resume: CALLBACK_TYPE | None = None
         # texts after which the satellite listens for a take (spoken with the "speak now" signal)
@@ -95,7 +111,8 @@ class Session:
             self.satellite, self.speaker, self.word, self.wake_word, state.done, target, state.variant
         )
         self.active = True
-        self._unsub = async_track_state_change_event(self.hass, [self.satellite], self._state_changed)
+        watched = [self.satellite, *([self._player] if self._player else [])]
+        self._unsub = async_track_state_change_event(self.hass, watched, self._state_changed)
         start = self.texts.get("start", wake_word=self.wake_word, speaker=self.speaker)
         await self._ask(f"{start} {self._instruction()}")
         self._on_change()
@@ -128,6 +145,10 @@ class Session:
             return
         self._heard = True
         self._misses = 0
+        if self._overlap:
+            # The instruction came late (a slow text-to-speech) and played into the take
+            self._result = TakeResult(None, ["overlap"])
+            return
         self._result = await self.hass.async_add_executor_job(
             save_take, self.household, self.word, self.speaker, pcm[:MAX_AUDIO_BYTES], self.satellite
         )
@@ -170,9 +191,14 @@ class Session:
         new = event.data["new_state"]
         if not self.active or new is None:
             return
+        if event.data["entity_id"] == self._player:
+            satellite = self.hass.states.get(self.satellite)
+            if new.state == "playing" and satellite is not None and satellite.state == "listening":
+                self._overlap = True
+            return
         if new.state == "listening":
             self._cancel_resume()
-            self._listened, self._heard = True, False
+            self._listened, self._heard, self._overlap = True, False, False
             return
         if new.state == "idle" and self._listened:
             self._cancel_resume()

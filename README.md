@@ -148,6 +148,10 @@ are listed, and starting on one that went away says so.
 word had only its first pipeline switched, and the takes went to the second wake word's assistant.
 From 0.2.1 every pipeline of the satellite is switched for the session.
 
+**Takes hold the device's own voice ("Saved", "Take 5 of 18").** The text-to-speech was too slow (an
+overloaded server): the satellite listened before its instruction played. From 0.2.2 such a take is
+asked again; make the text-to-speech faster to stop the repeats.
+
 **"No household.yaml".** The folder given at setup has no `household.yaml`: add the integration again
 and let it create one, or create it by hand as above.
 

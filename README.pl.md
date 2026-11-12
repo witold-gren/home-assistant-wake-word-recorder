@@ -147,6 +147,10 @@ na takiej, która przestała działać, pokazuje błąd.
 słowem wybudzającym przełączany był tylko pierwszy potok, a nagrania trafiały do asystenta drugiego
 słowa. Od 0.2.1 na czas sesji przełączane są wszystkie potoki satelity.
 
+**W nagraniach jest głos samego urządzenia („Zapisano”, „Nagranie 5 z 18”).** Zamiana tekstu na mowę
+była za wolna (przeciążony serwer): satelita słuchała, zanim zagrała polecenie. Od 0.2.2 takie
+nagranie jest powtarzane; przyspiesz zamianę tekstu na mowę, żeby powtórki ustały.
+
 **„No household.yaml”.** W folderze podanym przy konfiguracji nie ma `household.yaml`: dodaj
 integrację ponownie i pozwól jej go utworzyć albo utwórz go ręcznie jak wyżej.
 
