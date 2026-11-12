@@ -1,0 +1,134 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wake Word Recorder",
+        "description": "Folder of the household (with household.yaml). Takes are saved to its data/real folder.",
+        "data": {
+          "household_path": "Household folder"
+        }
+      },
+      "create": {
+        "title": "Create household.yaml",
+        "description": "There is no household.yaml in {path} yet. Choose who will record wake words and mark the children (they need more takes). Then add the words to household.yaml (see the README).",
+        "data": {
+          "people": "People",
+          "children": "Children"
+        }
+      }
+    },
+    "error": {
+      "household": "Could not read the household: {error}",
+      "no_people": "Choose at least one person.",
+      "duplicate_people": "Two people would get the same id - rename one of the person entities."
+    },
+    "abort": {
+      "already_configured": "Wake Word Recorder is already set up."
+    }
+  },
+  "entity": {
+    "stt": {
+      "stt": {
+        "name": "Speech to text"
+      }
+    },
+    "conversation": {
+      "agent": {
+        "name": "Agent"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "recording": "Recording"
+        }
+      }
+    },
+    "select": {
+      "speaker": {
+        "name": "Person"
+      },
+      "word": {
+        "name": "Wake word"
+      },
+      "satellite": {
+        "name": "Satellite"
+      },
+      "background_satellite": {
+        "name": "Background satellite"
+      },
+      "signal": {
+        "name": "Speak now signal",
+        "state": {
+          "beep": "Beep",
+          "chime": "Announcement chime",
+          "off": "None"
+        }
+      }
+    },
+    "button": {
+      "start": {
+        "name": "Start recording"
+      },
+      "stop": {
+        "name": "Stop recording"
+      },
+      "background": {
+        "name": "Listen 30 min"
+      }
+    },
+    "tts": {
+      "tts": {
+        "name": "Instructions voice"
+      }
+    }
+  },
+  "services": {
+    "start_session": {
+      "name": "Start recording",
+      "description": "The satellite asks for each take of the word and records it, no wake word needed. Defaults to the choices of the select entities.",
+      "fields": {
+        "satellite": {
+          "name": "Satellite",
+          "description": "Voice satellite that records (e.g. Home Assistant Voice PE)."
+        },
+        "speaker": {
+          "name": "Person",
+          "description": "Speaker id from household.yaml."
+        },
+        "word": {
+          "name": "Word",
+          "description": "Word id from household.yaml."
+        },
+        "count": {
+          "name": "Count",
+          "description": "Takes to record now (default: until the person's target)."
+        }
+      }
+    },
+    "stop_session": {
+      "name": "Stop recording",
+      "description": "Ends the session and switches the satellite back to its pipeline."
+    },
+    "reload": {
+      "name": "Reload household",
+      "description": "Reads household.yaml again (new people or words)."
+    },
+    "start_background": {
+      "name": "Record background",
+      "description": "The satellite records the sounds of the home (TV, talking, kitchen) for the given time, without speaking. Nobody should say the wake word meanwhile. Saved to data/background.",
+      "fields": {
+        "satellite": {
+          "name": "Satellite",
+          "description": "Voice satellite that records (default: the chosen one)."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "How long to record."
+        }
+      }
+    }
+  }
+}

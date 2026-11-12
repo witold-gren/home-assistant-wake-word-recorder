@@ -1,0 +1,134 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wake Word Recorder",
+        "description": "Folder z plikiem household.yaml (osoby i słowa). Nagrania trafiają do jego podfolderu data/real.",
+        "data": {
+          "household_path": "Folder z household.yaml"
+        }
+      },
+      "create": {
+        "title": "Utwórz household.yaml",
+        "description": "W {path} nie ma jeszcze pliku household.yaml. Wybierz, kto będzie nagrywał słowa wybudzające, i zaznacz dzieci (potrzebują więcej nagrań). Potem dopisz słowa do household.yaml (zobacz README).",
+        "data": {
+          "people": "Osoby",
+          "children": "Dzieci"
+        }
+      }
+    },
+    "error": {
+      "household": "Nie udało się odczytać household.yaml: {error}",
+      "no_people": "Wybierz co najmniej jedną osobę.",
+      "duplicate_people": "Dwie osoby dostałyby ten sam identyfikator - zmień nazwę jednej z encji osoby."
+    },
+    "abort": {
+      "already_configured": "Wake Word Recorder jest już skonfigurowany."
+    }
+  },
+  "entity": {
+    "stt": {
+      "stt": {
+        "name": "Mowa na tekst"
+      }
+    },
+    "conversation": {
+      "agent": {
+        "name": "Agent"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Stan",
+        "state": {
+          "idle": "Bezczynny",
+          "recording": "Nagrywanie"
+        }
+      }
+    },
+    "select": {
+      "speaker": {
+        "name": "Osoba"
+      },
+      "word": {
+        "name": "Słowo wybudzające"
+      },
+      "satellite": {
+        "name": "Satelita"
+      },
+      "background_satellite": {
+        "name": "Satelita do nagrania dźwięków domu"
+      },
+      "signal": {
+        "name": "Sygnał „mów teraz”",
+        "state": {
+          "beep": "Bip",
+          "chime": "Dźwięk zapowiedzi",
+          "off": "Brak"
+        }
+      }
+    },
+    "button": {
+      "start": {
+        "name": "Rozpocznij nagrywanie"
+      },
+      "stop": {
+        "name": "Zakończ nagrywanie"
+      },
+      "background": {
+        "name": "Nasłuchuj 30 min"
+      }
+    },
+    "tts": {
+      "tts": {
+        "name": "Głos poleceń"
+      }
+    }
+  },
+  "services": {
+    "start_session": {
+      "name": "Rozpocznij nagrywanie",
+      "description": "Satelita prosi o kolejne nagrania słowa i je zapisuje, bez słowa wybudzającego. Domyślnie wybory z encji select.",
+      "fields": {
+        "satellite": {
+          "name": "Satelita",
+          "description": "Satelita głosowy, który nagrywa (np. Home Assistant Voice PE)."
+        },
+        "speaker": {
+          "name": "Osoba",
+          "description": "Identyfikator osoby z household.yaml."
+        },
+        "word": {
+          "name": "Słowo",
+          "description": "Identyfikator słowa z household.yaml."
+        },
+        "count": {
+          "name": "Liczba",
+          "description": "Ile nagrań teraz (domyślnie: do celu tej osoby)."
+        }
+      }
+    },
+    "stop_session": {
+      "name": "Zakończ nagrywanie",
+      "description": "Kończy sesję i przełącza satelitę z powrotem na jego potok."
+    },
+    "reload": {
+      "name": "Wczytaj ponownie household.yaml",
+      "description": "Ponownie czyta household.yaml (nowe osoby lub słowa)."
+    },
+    "start_background": {
+      "name": "Nagraj dźwięki domu",
+      "description": "Satelita nagrywa dźwięki domu (TV, rozmowy, kuchnia) przez podany czas, nic nie mówiąc. W tym czasie nikt nie powinien mówić słowa wybudzającego. Zapis do data/background.",
+      "fields": {
+        "satellite": {
+          "name": "Satelita",
+          "description": "Satelita głosowy, który nagrywa (domyślnie wybrany)."
+        },
+        "minutes": {
+          "name": "Minuty",
+          "description": "Jak długo nagrywać."
+        }
+      }
+    }
+  }
+}

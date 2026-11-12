@@ -1,0 +1,26 @@
+{
+  "domain": "wake_word_recorder",
+  "name": "Wake Word Recorder",
+  "after_dependencies": [
+    "assist_satellite",
+    "ffmpeg"
+  ],
+  "codeowners": [
+    "@witold-gren"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "assist_pipeline",
+    "conversation",
+    "http",
+    "stt",
+    "tts"
+  ],
+  "documentation": "https://github.com/witold-gren/home-assistant-wake-word-recorder",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/witold-gren/home-assistant-wake-word-recorder/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.1"
+}

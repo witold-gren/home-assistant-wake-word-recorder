@@ -1,0 +1,9 @@
+# Tests of the Home Assistant integration (custom_components/wake_word_recorder)
+pytest-homeassistant-custom-component==0.13.316
+hassil==3.5.0
+home-assistant-intents==2026.1.28
+mutagen==1.48.1
+ha-ffmpeg==3.2.2
+pymicro-vad==1.0.1
+pyspeex-noise==1.0.2
+pillow

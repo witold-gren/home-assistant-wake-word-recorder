@@ -1,0 +1,34 @@
+start_session:
+  fields:
+    satellite:
+      selector:
+        entity:
+          domain: assist_satellite
+    speaker:
+      example: son
+      selector:
+        text:
+    word:
+      example: dzarwis
+      selector:
+        text:
+    count:
+      selector:
+        number:
+          min: 1
+          max: 100
+start_background:
+  fields:
+    satellite:
+      selector:
+        entity:
+          domain: assist_satellite
+    minutes:
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 240
+          unit_of_measurement: min
+stop_session:
+reload:
