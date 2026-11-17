@@ -24,6 +24,10 @@ does not.
   session and switched back afterwards, also after a restart of Home Assistant.
 - Everything stays at home: the takes are files in your config folder.
 
+![The Wake Word Recorder device in Home Assistant](images/device-en.png)
+
+The device in Home Assistant: choose a person, a satellite and a word, then **Start recording**. (A made-up household.)
+
 ## Requirements
 
 - Home Assistant 2026.2 or newer.

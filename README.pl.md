@@ -24,6 +24,10 @@ często nie reaguje.
   wraca do swojego, także po restarcie Home Assistant.
 - Wszystko zostaje w domu: nagrania to pliki w folderze konfiguracji.
 
+![Urządzenie Wake Word Recorder w Home Assistant](images/device-pl.png)
+
+Urządzenie w Home Assistant: wybierz osobę, satelitę i słowo, potem **Rozpocznij nagrywanie**. (Wymyślona rodzina.)
+
 ## Wymagania
 
 - Home Assistant 2026.2 lub nowszy.
